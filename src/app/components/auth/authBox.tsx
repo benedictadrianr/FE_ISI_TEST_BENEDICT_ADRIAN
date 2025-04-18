@@ -3,7 +3,7 @@
 import React, { FormEvent, useState } from "react";
 import Input from "../shared/input";
 import Button from "../shared/button";
-import { login, signup } from "@/app/(auth)/actions";
+import { FormData, login, signup } from "@/app/(auth)/actions";
 import Link from "next/link";
 
 type Props = {
@@ -11,12 +11,19 @@ type Props = {
 };
 
 const AuthBox = ({ authType }: Props) => {
-  const [role, setRole] = useState("lead");
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<FormData>({
+    username: "",
+    email: "",
+    password: "",
+    role: "lead",
+  });
 
   const changeRole = (buttonRole: string) => {
-    if (buttonRole === role) return;
-    setRole(buttonRole);
+    if (buttonRole === formData.role) return;
+    setFormData((prev) => ({
+      ...prev,
+      role: buttonRole,
+    }));
   };
 
   const onInput = (e: FormEvent<HTMLInputElement>) => {
@@ -28,42 +35,40 @@ const AuthBox = ({ authType }: Props) => {
   };
 
   const handleSubmit = async () => {
-    const formDataObj = new FormData();
-    Object.entries(formData).forEach(([key, value]) => {
-      formDataObj.append(key, value);
-    });
-
-    // Add role to form data
-    formDataObj.append("role", role);
+    console.log("form data object", formData);
 
     if (authType === "login") {
-      return login(formDataObj);
+      return login(formData);
     } else {
-      return signup(formDataObj);
+      return signup(formData);
     }
   };
 
+  console.log(formData);
+
   return (
     <div className="w-full max-w-[500px] bg-zinc-800 rounded-xl flex flex-col overflow-hidden">
-      <div className="flex bg-zinc-400">
-        <button
-          onClick={() => changeRole("lead")}
-          className={`${
-            role === "lead" ? "bg-zinc-800" : "bg-none"
-          } w-1/2 py-1 text-center hover:bg-zinc-800 cursor-pointer transition-colors rounded-t-md`}>
-          LEAD
-        </button>
-        <button
-          onClick={() => changeRole("team")}
-          className={`${
-            role === "team" ? "bg-zinc-800" : "bg-none"
-          } w-1/2 py-1 text-center hover:bg-zinc-800 cursor-pointer transition-colors rounded-t-md`}>
-          TEAM
-        </button>
-      </div>
+      {authType === "signup" && (
+        <div className="flex bg-zinc-400">
+          <button
+            onClick={() => changeRole("lead")}
+            className={`${
+              formData.role === "lead" ? "bg-zinc-800" : "bg-none"
+            } w-1/2 py-1 text-center hover:bg-zinc-800 cursor-pointer transition-colors rounded-t-md`}>
+            LEAD
+          </button>
+          <button
+            onClick={() => changeRole("team")}
+            className={`${
+              formData.role === "team" ? "bg-zinc-800" : "bg-none"
+            } w-1/2 py-1 text-center hover:bg-zinc-800 cursor-pointer transition-colors rounded-t-md`}>
+            TEAM
+          </button>
+        </div>
+      )}
       <div className="p-4 w-full">
         <h1 className="text-center text-2xl mb-4 uppercase">
-          {authType} as {role}
+          {authType} {authType === "signup" && `as ${formData.role}`}
         </h1>
         <form className="space-y-4 w-full">
           {authType === "signup" && (
