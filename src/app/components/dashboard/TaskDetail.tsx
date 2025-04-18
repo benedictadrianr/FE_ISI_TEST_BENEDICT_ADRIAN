@@ -100,21 +100,6 @@ const TaskDetail = ({ task, setCurrentTask, setTasks, isLead }: Props) => {
     }
   };
 
-  const fetchAvailableUsers = async () => {
-    const supabase = await createClient();
-    const delegations = task.task_delegations || [];
-    const { data: users, error } = await supabase
-      .from("profiles")
-      .select("id, username")
-      .not("id", "in", `(${delegations.join(",")})`);
-
-    if (error) {
-      console.error("Error fetching users:", error);
-    } else if (users) {
-      setAvailableUsers(users as User[]);
-    }
-  };
-
   const handleAddUser = async (userId: string) => {
     if (!task) return;
     const newDelegations = [...(task.task_delegations || []), userId];
@@ -213,6 +198,20 @@ const TaskDetail = ({ task, setCurrentTask, setTasks, isLead }: Props) => {
   };
 
   useEffect(() => {
+    const fetchAvailableUsers = async () => {
+      const supabase = await createClient();
+      const delegations = task.task_delegations || [];
+      const { data: users, error } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .not("id", "in", `(${delegations.join(",")})`);
+
+      if (error) {
+        console.error("Error fetching users:", error);
+      } else if (users) {
+        setAvailableUsers(users as User[]);
+      }
+    };
     if (isDropdownOpen) {
       fetchAvailableUsers();
     }

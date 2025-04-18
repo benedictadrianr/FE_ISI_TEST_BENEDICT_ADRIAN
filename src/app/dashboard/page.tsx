@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { User } from "@supabase/supabase-js";
 import Button from "../components/shared/button";
 import { redirect } from "next/navigation";
@@ -14,6 +14,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [tasks, setTasks] = useState<Tables<"tasks">[]>([]);
   const [currentTask, setCurrentTask] = useState<Tables<"tasks"> | null>(null);
+
   const getUser = async () => {
     const supabase = await createClient();
     const {
@@ -22,7 +23,9 @@ const Dashboard = () => {
     setUser(user);
   };
 
-  const getTasks = async () => {
+  const getTasks = useCallback(async () => {
+    if (!user) return;
+
     const supabase = await createClient();
 
     const { data, error } = await supabase
@@ -33,15 +36,15 @@ const Dashboard = () => {
       console.error(error.message);
     } else if (data) {
       const filteredTasks =
-        user?.user_metadata.role === "team"
+        user.user_metadata.role === "team"
           ? data.filter((task) =>
-              task.task_delegations?.includes(user?.id || "")
+              task.task_delegations?.includes(user.id || "")
             )
           : data;
       setTasks(filteredTasks);
       setCurrentTask(filteredTasks[0]);
     }
-  };
+  }, [user]);
 
   const handleLogout = async () => {
     const supabase = await createClient();
@@ -57,7 +60,7 @@ const Dashboard = () => {
     if (user) {
       getTasks();
     }
-  }, [user]);
+  }, [user, getTasks]);
 
   const createNewTask = async () => {
     const supabase = await createClient();
@@ -71,6 +74,7 @@ const Dashboard = () => {
       getTasks();
     }
   };
+
   const handleSelectTask = async (id: number) => {
     const selectedTask = tasks.find((task) => task.id === id);
     if (selectedTask) {
