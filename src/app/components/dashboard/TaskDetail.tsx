@@ -312,7 +312,7 @@ const TaskDetail = ({ task, setCurrentTask, setTasks, isLead }: Props) => {
               <TaskStatusTag status={task.task_status} />
             </button>
             {isStatusDropdownOpen && (
-              <div className="absolute top-full right-0 mt-1 bg-zinc-900 border rounded-md shadow-lg py-1 min-w-[200px] z-10">
+              <div className="absolute top-full right-0 mt-1 bg-zinc-900 border rounded-md shadow-lg py-1 min-w-[150px] z-10">
                 {statusOptions.map((status) => (
                   <button
                     key={status}

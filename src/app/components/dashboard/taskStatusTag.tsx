@@ -19,7 +19,9 @@ const TaskStatusTag = ({ status }: Props) => {
     }
   };
   return (
-    <div className={`border px-2 rounded-md ${TaskColorType()}`}>{status}</div>
+    <div className={`border px-2 rounded-md text-center ${TaskColorType()}`}>
+      {status}
+    </div>
   );
 };
 

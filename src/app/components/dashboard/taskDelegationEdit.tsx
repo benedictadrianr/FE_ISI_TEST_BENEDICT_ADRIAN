@@ -37,7 +37,6 @@ const TaskDelegationEdit = ({ list, classname, handleRemoveUser }: Props) => {
             ✖
           </button>{" "}
           {user.username}
-          {index < users.length - 1 && ","}
         </li>
       ))}
     </ul>
