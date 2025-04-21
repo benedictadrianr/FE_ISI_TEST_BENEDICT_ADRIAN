@@ -1,3 +1,5 @@
+"use client";
+
 import AuthBox from "@/app/components/auth/authBox";
 import React from "react";
 

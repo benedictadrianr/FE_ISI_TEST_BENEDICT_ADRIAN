@@ -5,9 +5,21 @@ import Input from "../shared/input";
 import Button from "../shared/button";
 import { FormData, login, signup } from "@/app/(auth)/actions";
 import Link from "next/link";
+import { AuthError } from "@supabase/auth-js";
 
 type Props = {
   authType: "login" | "signup";
+};
+
+type ErrorState = {
+  login: AuthError | null;
+  signup: AuthError | null;
+};
+
+type FieldErrors = {
+  email?: string;
+  password?: string;
+  username?: string;
 };
 
 const AuthBox = ({ authType }: Props) => {
@@ -17,6 +29,11 @@ const AuthBox = ({ authType }: Props) => {
     password: "",
     role: "lead",
   });
+  const [error, setError] = useState<ErrorState>({
+    login: null,
+    signup: null,
+  });
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const changeRole = (buttonRole: string) => {
     if (buttonRole === formData.role) return;
@@ -32,19 +49,63 @@ const AuthBox = ({ authType }: Props) => {
       ...prev,
       [name]: value,
     }));
-  };
 
-  const handleSubmit = async () => {
-    console.log("form data object", formData);
-
-    if (authType === "login") {
-      return login(formData);
-    } else {
-      return signup(formData);
+    if (fieldErrors[name as keyof FieldErrors]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
     }
   };
 
-  console.log(formData);
+  const validateForm = () => {
+    const errors: FieldErrors = {};
+
+    if (!formData.email) {
+      errors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = "Please enter a valid email";
+    }
+
+    if (!formData.password) {
+      errors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      errors.password = "Password must be at least 6 characters";
+    }
+
+    if (authType === "signup" && !formData.username) {
+      errors.username = "Username is required";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    if (authType === "login") {
+      return login({
+        formData: formData,
+        onError: (error: AuthError) => {
+          setError((prev) => ({
+            ...prev,
+            login: error,
+          }));
+        },
+      });
+    } else {
+      return signup({
+        formData: formData,
+        onError: (error: AuthError) => {
+          setError((prev) => ({
+            ...prev,
+            signup: error,
+          }));
+        },
+      });
+    }
+  };
 
   return (
     <div className="w-full max-w-[500px] bg-zinc-800 rounded-xl flex flex-col overflow-hidden">
@@ -78,6 +139,7 @@ const AuthBox = ({ authType }: Props) => {
               type="text"
               required
               onInput={onInput}
+              error={fieldErrors.username}
             />
           )}
           <Input
@@ -86,6 +148,7 @@ const AuthBox = ({ authType }: Props) => {
             type="email"
             required
             onInput={onInput}
+            error={fieldErrors.email}
           />
           <Input
             label="Password"
@@ -93,7 +156,13 @@ const AuthBox = ({ authType }: Props) => {
             type="password"
             required
             onInput={onInput}
+            error={authType === "signup" ? fieldErrors.password : undefined}
           />
+          {error[authType] && (
+            <div className="text-red-500 text-sm">
+              {error[authType]?.message}
+            </div>
+          )}
           <Link
             href={authType === "login" ? "/signup" : "/login"}
             className="hover:text-blue-700 text-sm w-1/2 text-end transition-colors">
